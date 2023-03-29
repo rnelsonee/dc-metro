@@ -20,9 +20,11 @@ class TrainBoard:
     def __init__(self, get_new_data):
         self.get_new_data = get_new_data
         self.display = Matrix().display
+    
         self.parent_group = displayio.Group(scale=1, x=0, y=3)
-
-        self.heading_label = Label(config['font'], anchor_point=(0,0))
+        self.display.rotation = config['rotation']
+    
+        self.heading_label = Label(config['heading_font'], anchor_point=(0,0))
         self.heading_label.color = config['heading_color']
         self.heading_label.text=config['heading_text']
         self.parent_group.append(self.heading_label)
@@ -63,21 +65,40 @@ class TrainBoard:
     def turn_on_display(self):
         self.display.brightness = 1
 
+    # Unused, but can be tied to a button
+    def rotate_display(self):
+        self.display.rotation = (self.display.rotation + 180) % 360
+
+    def alter_heading(self, show_heading: bool):   
+        if show_heading:
+            self.parent_group.insert(0, self.heading_label)
+            for i in range(config['num_trains']):
+                self.trains[i].set_y((config['bar_line_height']+config['line_spacer']) * i + config['heading_height'] + 1)
+        else:
+            self.parent_group.pop(0)
+            for i in range(config['num_trains']):
+                self.trains[i].set_y((config['bar_line_height']+config['line_spacer_no_heading']) * i + 1)
+
+    def show_banner(self, text: str):
+        for i in range(config['num_trains']):
+            self._hide_train(i)
+            self._update_train(1, 0x000000, text, "")
+
 class Train:
     def __init__(self, parent_group, index):
-        y = (int)(config['character_height'] + config['text_padding']) * (index + 1)
+        y = config['heading_height'] + (config['character_height'] + config['line_spacer']) * index + 1
 
-        self.line_rect = Rect(0, y-3, config['train_line_width'], config['train_line_height'], fill=config['loading_line_color'])
+        self.line_rect = Rect(0, y - config['bar_line_offset'], config['bar_line_width'], config['bar_line_height'], fill=config['loading_line_color'])
 
         self.destination_label = Label(config['font'], anchor_point=(0,0))
-        self.destination_label.x =  config['train_line_width'] + 1
+        self.destination_label.x =  config['bar_line_width'] + 1
         self.destination_label.y = y
         self.destination_label.color = config['text_color']
         self.destination_label.text = config['loading_destination_text'][:config['destination_max_characters']]
 
         self.min_label = Label(config['font'], anchor_point=(0,0))
-        self.min_label.x = config['matrix_width'] - (config['min_label_characters'] * config['character_width']) + 1
-        self.min_label.y = y
+        self.min_label.anchor_point = (1,0.5)
+        self.min_label.anchored_position = (config['matrix_width'], y)
         self.min_label.color = config['text_color']
         self.min_label.text = config['loading_min_text']
 
@@ -110,6 +131,13 @@ class Train:
 
         self.min_label.text = minutes
 
+    # Set a new y value when we show/hide heading
+    def set_y(self, y: int):
+        self.min_label.y = y
+        self.destination_label.y = y
+        self.line_rect.y = y - config['bar_line_offset']
+        self.min_label.anchored_position = (config['matrix_width'], y)
+        
     def update(self, line_color: int, destination: str, minutes: str):
         self.show()
         self.set_line_color(line_color)

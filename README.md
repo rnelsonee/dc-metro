@@ -1,8 +1,18 @@
-Forked from [metro-sign](https://github.com/metro-sign/dc-metro) to allow multiple stations and implement a "walking distance" modifier to ignore trains you cannot get to in time. Uses CircuitPython 8 and corresponding libraries.
+A fork from [erikrrodriguez's metro-sign](https://github.com/erikrrodriguez/dc-metro) (based on [metro-sign](https://github.com/metro-sign/dc-metro)) which adds button functionality.
 
-Includes fixes and features from:
-- Scott Garcia (scottiegarcia) (help with Metrohero API (RIP), tidying, and implementing shut off hours for the board) 
-- ScottKekoaShay (Auto swapping between train platforms, if desired)
+Adds:
+- Button support to hide the top banner and allow 4 trains to show
+- Button support to switch between alternating groups, showing two groups, or one at a time
+- New fonts
+
+Based on:
+- Forked from erikrrodriguez, who included:
+    - Walking distance modifier
+    - Updated to CircutPython 8
+    - Incorporated [scottiecarcia's](https://github.com/scottiegarcia/dc-metro) off-hours and Metrohero API
+    - Incorporated [ScottKekoaShay's](https://github.com/ScottKekoaShay/dc-metro) auto-swapping of stations
+- Also used [GJT-34's](https://github.com/GJT-34/dc-metro) awesome Metroesque.bdf font
+
 
 # Washington DC Metro Train Sign
 This project contains the source code to create your own Washington DC Metro sign. It was written using CircuitPython targeting the [Adafruit Matrix Portal](https://www.adafruit.com/product/4745) and is optimized for 64x32 RGB LED matrices.
@@ -68,7 +78,7 @@ This project contains the source code to create your own Washington DC Metro sig
 
     ![Lib Decompressed](img/lib.png)
 
-4. Copy all of the Python files from _src_ in this repository into the root of the _CIRCUITPY_ volume.
+4. Copy all of the Python files from _src_ in this repository into the root of the _CIRCUITPY_ volume. Also copy the two _*.bdf_ files into the the _lib_
 
     ![Source Files](img/source.png)
 
@@ -97,77 +107,41 @@ If you'd like to configure your board to turn the display off for certain hours 
 2. Make note of your username and your Adafruit IO key.
 
 ## Part 5: Configuring the Board
-1. Open the [config.py](src/config.py) file located in the root of the _CIRCUITPY_ volume.
-2. Fill in your WiFi SSID and password under the **Network Configuration** section.
-3. Under the **Metro Configuration** section:
+1. Open the [secrets.py](src/secrets.py) file located in the root of the _CIRCUITPY_ volume.
+    1. Fill in your WiFi _ssid_ and _password_.
+    2. Set either the _wmata_api_key_ or _metro_hero_api_key_ to the API key you got from [Part 3](#part-3-getting-a-wmata-/-metro-hero-api-key).
+2. Open the [config.py](src/config.py) file located in the root of the _CIRCUITPY_ volumse.
     1. If using MetroHero, update the _source_api_ field to `MetroHero`.
-    2. Set either the _wmata_api_key_ or _metro_hero_api_key to the API key you got from [Part 3](#part-3-getting-a-wmata-/-metro-hero-api-key).
-    3. Select your stations and lines from the [Metro Station Codes table](#dc-metro-station-codes), and set the _metro_station_codes_ value to the corresponding value in the table.
-    4. For _train_groups_1_, the values need to be either **'1'** or **'2'** or  **'3'**. This determines which platform's arrival times will be displayed. These typically fall in line with the values provided in the [Train Group table](#train-group-explanations), although single tracking and other events can cause these to change. The ordering must match the ordering used in _metro_station_codes_.
-        1. If you would like for the board to swap which train groups are displayed on each refresh, set the _swap_train_groups_ varaible to True, and define your second set of train groups in _train_groups_2_ 
-    6. Set the _walking_times_ values to the time it takes you to get to these stations. This will make your sign ignore trains arriving in less than this much time.
+    2. Select your stations and lines from the [Metro Station Codes table](#dc-metro-station-codes), and set the _metro_station_codes_ value to the corresponding value in the table.
+    3. For _train_groups_1_, the values need to be either **'1'** or **'2'** or  **'3'**. This determines which platform's arrival times will be displayed. These typically fall in line with the values provided in the [Train Group table](#train-group-explanations), although single tracking and other events can cause these to change. The ordering must match the ordering used in _metro_station_codes_. 
+    4. Set the _walking_times_ values to the time it takes you to get to these stations. This will make your sign ignore trains arriving in less than this much time.
 4. (Optional) Under the **Off Hours Configuration** section:
     1. Set _aio_username_ to the username you created with Adafruit in [Part 4]((optional)-obtain-adafruit-io-key-for-off-hours).
     2. Set _aio_key_ to the api key associated with your Adafruit account.
     3. Set the _display_on_time_ and _display_off_time_ variables to the time of day you would like the sign to be turned off and on. Note that they must be of the format "HH:MM" and use a 24 hour clock.
-4. At the end, the first part of your configuration file should look similar this:
+5. After you save these files, your board should refresh and connect to WMATA.
 
+## Part 6: Using the Board
+### Powering on
+1. The board will automatically run the metro code on every power-up, by plugging in any USB-C cable.
 
+### Using the buttons
+1. You can change between showing three of four lines of trains (with and without the heading text) by pressing the **'UP'** button on the board. This is shown below
 
-```python
-#########################
-# Network Configuration #
-#########################
+![Heading hidden](img/four_lines.jpg)
 
-# WIFI Network SSID
-'wifi_ssid': 'Grindr Pickup Zone',
+2. You can also change which train groups to show by pressing the **'DOWN'** button the board. The modes will cycle as follows:
 
-# WIFI Password
-'wifi_password': 'MyMetroBoardBringsTheBoisToTheNavyYard',
+| Mode          | Shows         |
+|---------------|---------------|
+| Both groups   | Both train groups at once (merged, sorted by earliest) |
+| Alt.groups    | Alternate between groups every few seconds |
+| Group 1       | Shows only the first group set in config.py |
+| Group 2       | Shows only the second group set in config.py |
 
-#########################
-# Metro Configuration   #
-#########################
-'source_api': 'WMATA', # WMATA or MetroHero.
+After you press the DOWN button, wait for the text to show to confirm the change
 
-# WMATA / MetroHero API Key
-'wmata_api_key': 'd3adb33fd3adb33fd3adb33f',
-'metro_hero_api_key': '',
-
-# Metro Station Code
-'metro_station_codes': ['E03','C02'],
-
-# Metro Train Group
-'train_groups': ['2','2'],
-
-#Walking Distance Times, ignore trains arriving in less than this time
-# [2, 12]
-'walking_times': [8, 8],
-
-# API Key for WMATA
-'metro_api_key': 'd3adb33fd3adb33fd3adb33f',
-
-...
-...
-...
-
-#############################
-# Off Hours Configuration   #
-#############################
-
-# adafruit io settings, necessary for determining current time to sleep
-# An account is free to set up, instructions below
-# https://learn.adafruit.com/adafruit-magtag/getting-the-date-time
-'aio_username': 'aio_username',
-'aio_key': 'jf9834f983hf98h434',
-
-# Time of day to turn board on and off - must be 24 hour "HH:MM"
-'display_on_time': "07:00",
-'display_off_time': "22:00",
-```
-
-
-5. After you save this file, your board should refresh and connect to WMATA.
+![Changing modes](img/switching.jpg)
 
 ## Troubleshooting
 If something goes wrong, take a peek at the [Adafruit Documentation](https://learn.adafruit.com/adafruit-matrixportal-m4). Additionally, you can connect to the board using a [serial connection](https://learn.adafruit.com/welcome-to-circuitpython/kattni-connecting-to-the-serial-console) to gain access to its logging.

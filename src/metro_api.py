@@ -16,24 +16,24 @@ class MetroApi:
 
     def _fetch_train_predictions(self, wifi, station_codes, groups, walks, retry_attempt: int) -> [dict]:
         try:
-            print('Fetching...')
+            #print('Fetching...')
             start = time.time()
 
             if config['source_api'] == 'WMATA':
                 # WMATA Method
                 api_url = config['wmata_api_url'] + ','.join(set(station_codes))
-                response = wifi.get(api_url, headers={'api_key': config['wmata_api_key']}, timeout=30).json()
+                response = wifi.get(api_url, headers={'api_key': secrets.get('wmata_api_key')}, timeout=30).json()
                 trains = list(filter(lambda t: (t['LocationCode'], t['Group']) in groups, response['Trains']))
             else:
                 #Metro Hero Method
                 trains = []
                 for station in set(station_codes): # select trains in desired direction
                     api_url = config['metro_hero_api_url'].replace('[stationCode]', station)
-                    response = wifi.get(api_url, headers={'apiKey': config['metro_hero_api_key']}, timeout=30)
+                    response = wifi.get(api_url, headers={'apiKey': secrets.get('metro_hero_api_key')}, timeout=30)
                     res = response.json()[:5]
                     response.close()
                     trains.extend(list(filter(lambda t: (station, t['Group']) in groups, res)))
-            print('Received response from ' + config['source_api'] + ' api...')
+            #print('Received response from ' + config['source_api'] + ' api...')
             TIME_BUFFER = round((time.time() - start)/60) + 1
             trains = [self._normalize_train_response(t, TIME_BUFFER) for t in trains]
             
@@ -43,12 +43,12 @@ class MetroApi:
             if len(groups) > 1:
                 trains = sorted(trains, key=lambda t: self.arrival_map(t['arrival']))
             
-            print("Trains returned by api: " + str(trains))
+            #print("Trains returned by api: " + str(trains))
             print('Time to Update: ' + str(time.time() - start))
             return trains
 
         except Exception as e:
-            print(e)
+            #print(e)
             if retry_attempt < config['metro_api_retries']:
                 print('Failed to connect to API. Reattempting...')
                 # Recursion for retry logic because I don't care about your stack
@@ -60,11 +60,11 @@ class MetroApi:
         if arr == 'BRD':
             return 0
         elif arr == 'ARR':
-            return 1
+            return 0.5
         elif arr.isdigit():
             return int(arr)
         else:
-            return 100 # DLY would fall into this case, but not sure how to handle it without storing what the previous time was
+            return 90 # DLY would fall into this case, but not sure how to handle it without storing what the previous time was
 
     def _normalize_train_response(self, train: dict, buff:int) -> dict:
         line = train['Line']
@@ -90,7 +90,7 @@ class MetroApi:
             'line_color': self._get_line_color(line),
             'destination': destination[:config['destination_max_characters']],
             'arrival': arrival,
-            'loc': loc
+            #'loc': loc
         }
 
     def _get_line_color(self, line: str) -> int:

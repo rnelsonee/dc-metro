@@ -3,3 +3,6 @@
 
 lib
 boot_out.txt
+
+src/secrets_mine.py
+src/secrets_public.py
