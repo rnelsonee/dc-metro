@@ -2,6 +2,7 @@ import time
 from config import config
 from train_board import TrainBoard
 from metro_api import MetroApi, MetroApiOnFireException
+from button import Button
 
 from secrets import secrets
 import busio
@@ -77,13 +78,9 @@ if OFF_HOURS_ENABLED:
     ON_HOUR, ON_MINUTE = map(int, config['display_on_time'].split(":"))
     OFF_HOUR, OFF_MINUTE = map(int, config['display_off_time'].split(":"))
 
-dn_button = DigitalInOut(board.BUTTON_DOWN)
-dn_button.switch_to_input(pull=Pull.UP)
-dn_button_unpressed = True
-
-up_button = DigitalInOut(board.BUTTON_UP)
-up_button.switch_to_input(pull=Pull.UP)
-up_button_unpressed = True
+# Initialize buttons which we will use in the while True loop
+dn_button = Button('down')
+up_button = Button('up')
 
 # Switch modes, depending on User pressing "UP" button
 # Mode      |   Train group to show
@@ -98,8 +95,6 @@ while True:
     if OFF_HOURS_ENABLED and is_off_hours():
         train_board.turn_off_display()
     else:
-        train_board.refresh()
-        train_board.turn_on_display()
         if switch_mode == 0:
             train_groups = TRAIN_GROUPS_1 + TRAIN_GROUPS_2
         elif switch_mode == 1:
@@ -108,27 +103,27 @@ while True:
             train_groups = TRAIN_GROUPS_1
         else:
             train_groups = TRAIN_GROUPS_2
+        
+        train_board.refresh()
+        train_board.turn_on_display()
 
     counter = 0
-    
     while counter < DIVISOR:
         counter += 1
 
         # Pressing the "DOWN" button will toggle the heading text on/off
         # to allow for one more train to show
-        if dn_button.value is False and dn_button_unpressed:
+        if dn_button.is_pressed():
             show_heading = not show_heading
             print(f'Down putton pressed, show_heading is now {show_heading}')
             train_board.alter_heading(show_heading)
-       
-        dn_button_unpressed = dn_button.value
+
 
         # Changes the group mode, as explained by switch_mode above
-        if up_button.value is False and up_button_unpressed:
+        if up_button.is_pressed():
             switch_mode = (switch_mode + 1) % 4
             print(f'Up button pressed, going to mode {mode_text[switch_mode]}')
             train_board.show_banner(f'{mode_text[switch_mode]}')
 
-        up_button_unpressed = up_button.value
 
         time.sleep(REFRESH_INTERVAL/DIVISOR)

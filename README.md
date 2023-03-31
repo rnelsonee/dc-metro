@@ -29,6 +29,7 @@ This project contains the source code to create your own Washington DC Metro sig
     - [64x32 RGB LED Matrix - 6mm pitch](https://www.adafruit.com/product/2276)
 - A **USB-C power supply** (15w phone adapters should work fine for this code, but the panels can theoretically pull 20w if every pixel is on white)
 - A **USB-C cable** that can connect your computer/power supply to the board
+- [LED diffuser film](https://www.amazon.com/dp/B08PFXCSZL?psc=1&ref=ppx_yo2ov_dt_b_product_details) _(optional)_
 
 ## Tools
 - A small phillips head screwdriver
@@ -82,7 +83,7 @@ This project contains the source code to create your own Washington DC Metro sig
 
     ![Source Files](img/source.png)
 
-5. The board should now light up with a loading screen, but we've still got some work to do.
+5. The board should now light up with a loading screen, but we've still got some work to do. The picture below shows the board without LED diffuser film.
 
     ![Loading Sign](img/loading.jpg)
 
@@ -128,16 +129,16 @@ If you'd like to configure your board to turn the display off for certain hours 
 ### Using the buttons
 1. You can change between showing three of four lines of trains (with and without the heading text) by pressing the **'UP'** button on the board. This is shown below
 
-![Heading hidden](img/four_lines.jpg)
+![Heading hidden](img/four_lines.png)
 
 2. You can also change which train groups to show by pressing the **'DOWN'** button the board. The modes will cycle as follows:
 
-| Mode          | Shows         |
-|---------------|---------------|
-| Both groups   | Both train groups at once (merged, sorted by earliest) |
-| Alt.groups    | Alternate between groups every few seconds |
-| Group 1       | Shows only the first group set in config.py |
-| Group 2       | Shows only the second group set in config.py |
+| Mode          | Shows                                                     |
+|---------------|-----------------------------------------------------------|
+| Both groups   | Both train groups at once (merged, sorted by earliest)    |
+| Alt. groups    | Alternate between groups every few seconds               |
+| Group 1       | Shows only the first group set in config.py               |
+| Group 2       | Shows only the second group set in config.py              |
 
 After you press the DOWN button, wait for the text to show to confirm the change
 
